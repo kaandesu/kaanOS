@@ -1,6 +1,6 @@
 NASM=nasm
 QEMU=qemu-system-x86_64
-DEFAULT_ASM_FILE=boot_disk.asm
+DEFAULT_ASM_FILE=boot_protected.asm
 ASM_FILE ?= $(DEFAULT_ASM_FILE)
 BIN_FILE=run.bin
 
