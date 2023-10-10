@@ -36,12 +36,6 @@ call printError
 correct_sector_success:
 
 
-; printing what is in the next sector
-mov ah, 0x0e
-mov al, [0x7e00]
-int 0x10
-mov al, 0x0D
-int 0x10
 
 
 jmp $  
