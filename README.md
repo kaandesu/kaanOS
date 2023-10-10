@@ -26,6 +26,10 @@ start the run.bin file with qemu-system-x86_64
 make run
 ```
 
+## Documentation
+
+You can find the documentation/explenation for the code ([boot.asm](./boot.asm)) [here](./docs/boot_asm.md).
+
 ## License
 
 kaanOS is licensed under the [MIT License](LICENSE).
