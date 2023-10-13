@@ -1,48 +1,34 @@
 
 ; setting up the stack
-disk_load:
-    xor ax, ax
-    mov es, ax
-    mov ds, ax
-    mov bp, 0x8000
-    mov sp, bp
-
-    mov bx, 0x7e00
-
+disk_load:    
+    push dx                    
+    ; mov bx, 0x7e00 ; 
+    
     ; reading the disk
-
-    mov ah, 2 ;  
-    mov al, 1 ; num of sectors we want to read
-    mov ch, 0 ; cylinder number
-    mov dh, 0 ; head number
-    mov cl, 2 ; sector number
-    mov dl, [BOOT_DISK] ; drive number that we saved in a var
+    mov ah, 0x02 ; BIOS read sector function 
+    mov al, dh ; num of sectors we want to read
+    mov ch, 0x00 ; cylinder number
+    mov dh, 0x00 ; head number
+    mov cl, 0x02 ; sector number    
     ; es:bs = 0x7e00
     ; es: extra segment
     ; es * 16 + bx = 0x7e00
     ; so we did -> mov bx, 0x7e00
     int 0x13
-    ret 
 
-    
-    ; Failure detection    
+    ; Failure detection
     jnc disk_read_success ; checking if the carry flag is high
     mov bx, FAIL_MESSAGE_CARRY
-    call printError
+    call printString
     disk_read_success:
-    cmp al, 1
+    pop dx 
+    cmp dh, al
     je correct_sector_success
     mov bx, FAIL_MESSAGE_SEC_NUM
-    call printError
+    call printString
     correct_sector_success:
     
-
-%include './utils/print_function.asm'
-FAIL_MESSAGE_CARRY: db "Failure: carry flag (cf) is high!",0 
-FAIL_MESSAGE_SEC_NUM: db "Failure: wrong number of sectors to read!", 0
-
-
-
-; filling the second sector (one that will be readed) with 'K's
-; times 512 db 'K'
+    
+    ret
+    
 
