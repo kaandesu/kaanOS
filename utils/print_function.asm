@@ -1,4 +1,4 @@
-printError:
+printString:
 	mov ah, 0x0e
 	printLoop:
 		mov al, [bx]
