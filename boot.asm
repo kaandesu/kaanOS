@@ -2,40 +2,6 @@
 [org 0x7c00]
 mov [BOOT_DISK], dl ; after boot drive number stored in dl (where booted) 
 
-; setting up the stack
-xor ax, ax
-mov es, ax
-mov ds, ax
-mov bp, 0x8000
-mov sp, bp
-
-mov bx, 0x7e00
-
-; reading the disk
-
-mov ah, 2 ;  
-mov al, 1 ; num of sectors we want to read
-mov ch, 0 ; cylinder number
-mov dh, 0 ; head number
-mov cl, 2 ; sector number
-mov dl, [BOOT_DISK] ; drive number that we saved in a var
-; es:bs = 0x7e00
-; es: extra segment
-; es * 16 + bx = 0x7e00
-; so we did -> mov bx, 0x7e00
-int 0x13
-
-; Failure detection
-jnc disk_read_success ; checking if the carry flag is high
-mov bx, FAIL_MESSAGE_CARRY
-call printError
-disk_read_success:
-cmp al, 1
-je correct_sector_success
-mov bx, FAIL_MESSAGE_SEC_NUM
-call printError
-correct_sector_success:
-
 ; equ is used to set up constants
 ; defining the offsets
 CODE_SEG equ code_descriptor - GDT_Start
@@ -56,7 +22,7 @@ mov cr0, eax
 jmp CODE_SEG:start_protected_mode
 
 jmp $
-%include './utils/print_function.asm'
+%include './utils/disk_load.asm'
 ; define protected after real mode
 
 ; GDT (Global Descriptor Table)
@@ -144,12 +110,12 @@ start_protected_mode:
 	jmp $
 
 BOOT_DISK: db 0
-FAIL_MESSAGE_CARRY: db "Failure: carry flag (cf) is high!",0 
-FAIL_MESSAGE_SEC_NUM: db "Failure: wrong number of sectors to read!", 0
 
 
 times 510-($-$$) db 0
 db 0x55, 0xaa
 
-; filling the second sector (one that will be readed) with 'K's, 
-times 512 db 'K'
+; We know that BIOS will load only the first 512-byte sector from the disk, ; so if we purposely add a few more sectors to our code by repeating some
+; familiar numbers, we can prove to ourselfs that we actually loaded those ; additional two sectors from the disk we booted from.
+times 256 dw 0xdada
+times 256 dw 0xface
