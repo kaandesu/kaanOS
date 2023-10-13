@@ -2,6 +2,13 @@
 [org 0x7c00]
 mov [BOOT_DISK], dl ; after boot drive number stored in dl (where booted) 
 
+mov bp, 0x8000 ; mov sp, bp ;
+mov bx, 0x9000 ; mov dh, 5 ; mov dl, [BOOT_DRIVE]
+
+mov dh, 2 ; number of sectors to read ('times 256 dw 0xface is a sector')
+mov dl, [BOOT_DISK]
+
+call disk_load
 ; equ is used to set up constants
 ; defining the offsets
 CODE_SEG equ code_descriptor - GDT_Start
@@ -22,7 +29,12 @@ mov cr0, eax
 jmp CODE_SEG:start_protected_mode
 
 jmp $
+%include './utils/print_function.asm'
 %include './utils/disk_load.asm'
+
+FAIL_MESSAGE_CARRY: db "Failure: carry flag (cf) is high!",0 
+FAIL_MESSAGE_SEC_NUM: db "Failure: wrong number of sectors to read!", 0
+
 ; define protected after real mode
 
 ; GDT (Global Descriptor Table)
@@ -98,6 +110,8 @@ GDT_Descriptor:
 
 
 [bits 32]
+VIDEO_MEMORY equ 0xb8000
+WHITE_ON_BLACK equ 0x0f
 start_protected_mode:
 	; protected mode code here
 	; how to print a character:
@@ -105,8 +119,8 @@ start_protected_mode:
 	; first byte = character
 	; second byte = color
 	mov al, 'A'
-	mov ah, 0x0f ; white on black
-	mov [0xb8000], ax ; move ax to videoMemory
+	mov ah, WHITE_ON_BLACK ; white on black
+	mov [VIDEO_MEMORY], ax ; move ax to videoMemory
 	jmp $
 
 BOOT_DISK: db 0
@@ -118,4 +132,7 @@ db 0x55, 0xaa
 ; We know that BIOS will load only the first 512-byte sector from the disk, ; so if we purposely add a few more sectors to our code by repeating some
 ; familiar numbers, we can prove to ourselfs that we actually loaded those ; additional two sectors from the disk we booted from.
 times 256 dw 0xdada
+times 256 dw 0xface
+times 256 dw 0xface
+times 256 dw 0xface
 times 256 dw 0xface
